@@ -4,17 +4,6 @@ pragma solidity 0.8.0;
 import "./Ownable.sol";
 
 // TO BE OPTIMISED
-// Suggestions:
-// Optimize storage slots
-// Transform modifier functions into internal functions.
-// Change require statement to custom errors and revert statements to also use custom errors.
-// Stop inheriting ownable and create an internal function to that checks if msg.sender == owner without the additional functionality.
-// Optimize the size of variables (for example timestamps do not need to be uint256).
-// Variables that are only set once can be set as immutable if they are initialized in the constructor
-// Variables that do not change in value can be set as constant
-// Stop inheriting the constants contract, move the constants to the Gas.sol contract
-
-//reset MEMORY variables to 0 in history and payment
 
 contract Constants {
     uint256 public tradeFlag = 1;
@@ -64,12 +53,9 @@ contract GasContract is Ownable, Constants {
 
     struct ImportantStruct {
         uint256 amount;
-        //from uint256
-
-        uint8 valueA; // max 3 digits
+        uint256 valueA; // max 3 digits
         uint256 bigValue;
-        //from uint256
-        uint8 valueB; // max 3 digits
+        uint256 valueB; // max 3 digits
         bool paymentStatus;
         address sender;
     }
@@ -190,8 +176,6 @@ contract GasContract is Ownable, Constants {
             status[i] = true;
         }
         return ((status[0] == true), _tradeMode);
-
-        //reset to 0
     }
 
     function getPayments(
