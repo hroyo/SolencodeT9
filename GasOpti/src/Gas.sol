@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.4;
 
-import "./Ownable.sol";
-
 // TO BE OPTIMISED
 // Optimize storage slots
 // Transform modifier functions into internal functions.
-// Stop inheriting ownable and create an internal function to that checks if msg.sender == owner without the additional functionality.
 // Optimize the size of variables (for example timestamps do not need to be uint256).
 // Variables that are only set once can be set as immutable if they are initialized in the constructor
 // Variables that do not change in value can be set as constant
@@ -19,7 +16,7 @@ contract Constants {
     uint256 public dividendFlag = 1;
 }
 
-contract GasContract is Ownable, Constants {
+contract GasContract is Constants {
     uint256 public totalSupply = 0; // cannot be updated
     uint256 public paymentCounter = 0;
     mapping(address => uint256) public balances;
