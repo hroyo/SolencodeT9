@@ -113,7 +113,7 @@
   }
   ```
 
-The ERC20 `transfer` function is overridden to add the checkCall function before the original `transfer` function is called.
+The ERC20 `transfer` function is overridden to add the `checkCall` function before the original `transfer` function is called.
 When calling the transfer function with inputs 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2, 10000, 
 the transferOccured event is triggered:
 
