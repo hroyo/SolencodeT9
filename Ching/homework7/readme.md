@@ -114,7 +114,7 @@
   ```
 
 The ERC20 `transfer` function is overridden to add the `checkCall` function before the original `transfer` function is called.
-When calling the transfer function with inputs 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2, 10000, 
+When calling the `transfer` function with inputs `0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2`, `10000`, 
 the transferOccured event is triggered:
 
 ![image](https://github.com/BigBangInfinity/Encode_ExpertSolidityBootcamp_Homework/assets/37957341/916fe220-19b5-46f7-a683-9d515a451cc4)
