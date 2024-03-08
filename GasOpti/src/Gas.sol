@@ -10,18 +10,12 @@ pragma solidity 0.8.4;
 // Stop inheriting the constants contract, move the constants to the Gas.sol contract
 // reset MEMORY variables to 0 in history and payment
 
-contract Constants {
-    uint256 public tradeFlag = 1;
-    uint256 public basicFlag = 0;
-    uint256 public dividendFlag = 1;
-}
-
-contract GasContract is Constants {
-    uint256 public totalSupply = 0; // cannot be updated
-    uint256 public paymentCounter = 0;
+contract GasContract {
+    uint256 immutable totalSupply;
+    uint8 paymentCounter = 0;
     mapping(address => uint256) public balances;
-    uint256 public tradePercent = 12;
-    address public contractOwner;
+    uint8 constant tradePercent = 12;
+    address immutable contractOwner;
     uint256 public tradeMode = 0;
     mapping(address => Payment[]) public payments;
     mapping(address => uint256) public whitelist;
@@ -115,12 +109,12 @@ contract GasContract is Constants {
         // 2) skip loops where the address in _admins array is 0
         // 3) add element from _admins array (input) to administrators array (storage)
         // 4) set the balance of the address in the administrators array to 0, except for the contractOwner
-        balances[contractOwner] = totalSupply;
-        emit supplyChanged(contractOwner, totalSupply);
+        balances[msg.sender] = _totalSupply;
+        emit supplyChanged(msg.sender, _totalSupply);
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (_admins[ii] != address(0)) {
                 administrators[ii] = _admins[ii];
-                if (_admins[ii] != contractOwner) {
+                if (_admins[ii] != msg.sender) {
                     balances[_admins[ii]] = 0;
                     emit supplyChanged(_admins[ii], 0);
                 }
@@ -143,14 +137,6 @@ contract GasContract is Constants {
     function balanceOf(address _user) public view returns (uint256 balance_) {
         uint256 balance = balances[_user];
         return balance;
-    }
-
-    function getTradingMode() public view returns (bool mode_) {
-        bool mode = false;
-        if (tradeFlag == 1 || dividendFlag == 1) {
-            mode = true;
-        } // REMOVED ELSE
-        return mode;
     }
 
     function addHistory(
@@ -239,7 +225,7 @@ contract GasContract is Constants {
                 payments[_user][ii].admin = _user;
                 payments[_user][ii].paymentType = _type;
                 payments[_user][ii].amount = _amount;
-                bool tradingMode = getTradingMode();
+                bool tradingMode = true;
                 addHistory(_user, tradingMode);
                 emit PaymentUpdated(
                     senderOfTx,
