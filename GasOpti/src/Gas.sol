@@ -7,8 +7,7 @@ pragma solidity 0.8.4;
 // Optimize the size of variables (for example timestamps do not need to be uint256).
 // Variables that are only set once can be set as immutable if they are initialized in the constructor
 // Variables that do not change in value can be set as constant
-// Stop inheriting the constants contract, move the constants to the Gas.sol contract
-// reset MEMORY variables to 0 in history and payment
+// Delete / reset varaibles after use
 
 contract GasContract {
     uint256 immutable totalSupply;
@@ -16,11 +15,9 @@ contract GasContract {
     mapping(address => uint256) public balances;
     uint8 constant tradePercent = 12;
     address immutable contractOwner;
-    uint256 public tradeMode = 0;
-    mapping(address => Payment[]) public payments;
+    mapping(address => Payment[]) payments;
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
-    bool public isReady = false;
     enum PaymentType {
         Unknown,
         BasicPayment,
@@ -70,10 +67,6 @@ contract GasContract {
         _;
     }
 
-    error originatorNotSenderError();
-    error notWhitelistedError();
-    error incorrectTierError();
-
     modifier checkIfWhiteListed(address sender) {
         address senderOfTx = msg.sender;
         if (senderOfTx != sender) {
@@ -99,7 +92,16 @@ contract GasContract {
     );
     event WhiteListTransfer(address indexed);
 
+    error originatorNotSenderError();
+    error notWhitelistedError();
+    error incorrectTierError();
     error nonZeroAddressError();
+    error insufficientBalanceError();
+    error nameTooLongError();
+    error idNotGreaterThanZeroError();
+    error amountNotGreaterThanZeroError();
+    error tierGreaterThan255Error();
+    error amountSmallerThanThreeError();
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
         contractOwner = msg.sender;
@@ -155,18 +157,6 @@ contract GasContract {
         return ((status[0] == true), _tradeMode);
     }
 
-    function getPayments(
-        address _user
-    ) public view returns (Payment[] memory payments_) {
-        if (_user == address(0)) {
-            revert nonZeroAddressError();
-        }
-        return payments[_user];
-    }
-
-    error insufficientBalanceError();
-    error nameTooLongError();
-
     function transfer(
         address _recipient,
         uint256 _amount,
@@ -197,9 +187,6 @@ contract GasContract {
         }
         return (status[0] == true);
     }
-
-    error idNotGreaterThanZeroError();
-    error amountNotGreaterThanZeroError();
 
     function updatePayment(
         address _user,
@@ -236,9 +223,6 @@ contract GasContract {
             }
         }
     }
-
-    error tierGreaterThan255Error();
-    error amountSmallerThanThreeError();
 
     function addToWhitelist(
         address _userAddrs,
