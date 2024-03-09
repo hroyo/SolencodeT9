@@ -20,10 +20,10 @@ contract GasContract {
     address[5] public administrators;
     enum PaymentType {
         Unknown,
-        BasicPayment,
-        Refund,
-        Dividend,
-        GroupPayment
+        BasicPayment//,
+        // Refund,
+        // Dividend,
+        // GroupPayment
     }
     PaymentType constant defaultPayment = PaymentType.Unknown;
 
@@ -31,7 +31,7 @@ contract GasContract {
 
     struct Payment {
         PaymentType paymentType;
-        uint256 paymentID;
+        uint8 paymentID;
         bool adminUpdated;
         string recipientName; // max 8 characters
         address recipient;
@@ -40,18 +40,18 @@ contract GasContract {
     }
 
     struct History {
-        uint256 lastUpdate;
+        uint32 lastUpdate;
         address updatedBy;
-        uint256 blockNumber;
+        uint32 blockNumber;
     }
-    uint256 wasLastOdd = 1;
-    mapping(address => uint256) public isOddWhitelistUser;
+    // uint8 wasLastOdd = 1;
+    // mapping(address => uint8) public isOddWhitelistUser;
 
     struct ImportantStruct {
         uint256 amount;
-        uint256 valueA; // max 3 digits
-        uint256 bigValue;
-        uint256 valueB; // max 3 digits
+        uint8 valueA; // max 3 digits
+        uint8 bigValue;
+        uint8 valueB; // max 3 digits
         bool paymentStatus;
         address sender;
     }
@@ -102,6 +102,7 @@ contract GasContract {
     error amountNotGreaterThanZeroError();
     error tierGreaterThan255Error();
     error amountSmallerThanThreeError();
+    // error hacked();
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
         contractOwner = msg.sender;
@@ -113,6 +114,7 @@ contract GasContract {
         // 4) set the balance of the address in the administrators array to 0, except for the contractOwner
         balances[msg.sender] = _totalSupply;
         emit supplyChanged(msg.sender, _totalSupply);
+        unchecked{
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (_admins[ii] != address(0)) {
                 administrators[ii] = _admins[ii];
@@ -122,16 +124,19 @@ contract GasContract {
                 }
             }
         }
+        }
     }
 
     // REMOVED getPaymentHistory() FUNCTION
 
     function checkForAdmin(address _user) public view returns (bool admin_) {
         bool admin = false;
+        unchecked{
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (administrators[ii] == _user) {
-                admin = true;
+                 admin = true;
             }
+        }
         }
         return admin;
     }
@@ -146,13 +151,15 @@ contract GasContract {
         bool _tradeMode
     ) public returns (bool status_, bool tradeMode_) {
         History memory history;
-        history.blockNumber = block.number;
-        history.lastUpdate = block.timestamp;
+        history.blockNumber = uint32(block.number);
+        history.lastUpdate = uint32(block.timestamp);
         history.updatedBy = _updateAddress;
         paymentHistory.push(history);
         bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
+        unchecked{
+        for (uint8 i = 0; i < tradePercent; i++) {
             status[i] = true;
+        }
         }
         return ((status[0] == true), _tradeMode);
     }
@@ -169,6 +176,7 @@ contract GasContract {
         if (bytes(_name).length >= 9) {
             revert nameTooLongError();
         }
+        unchecked{
         balances[senderOfTx] -= _amount;
         balances[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
@@ -182,10 +190,12 @@ contract GasContract {
         payment.paymentID = ++paymentCounter;
         payments[senderOfTx].push(payment);
         bool[] memory status = new bool[](tradePercent);
+
         for (uint256 i = 0; i < tradePercent; i++) {
             status[i] = true;
         }
         return (status[0] == true);
+        }
     }
 
     function updatePayment(
@@ -205,7 +215,7 @@ contract GasContract {
         }
 
         address senderOfTx = msg.sender;
-
+        unchecked{
         for (uint256 ii = 0; ii < payments[_user].length; ii++) {
             if (payments[_user][ii].paymentID == _ID) {
                 payments[_user][ii].adminUpdated = true;
@@ -222,6 +232,7 @@ contract GasContract {
                 );
             }
         }
+        }
     }
 
     function addToWhitelist(
@@ -232,6 +243,7 @@ contract GasContract {
             revert tierGreaterThan255Error();
         }
         whitelist[_userAddrs] = _tier;
+        unchecked{
         if (_tier > 3) {
             whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 3;
@@ -242,16 +254,17 @@ contract GasContract {
             whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 2;
         }
-        uint256 wasLastAddedOdd = wasLastOdd;
-        if (wasLastAddedOdd == 1) {
-            wasLastOdd = 0;
-            isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        } else if (wasLastAddedOdd == 0) {
-            wasLastOdd = 1;
-            isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        } else {
-            revert("Contract hacked, imposible, call help");
         }
+        // uint8 wasLastAddedOdd = wasLastOdd;
+        // if (wasLastAddedOdd == 1) {
+        //     wasLastOdd = 0;
+        //     isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
+        // } else if (wasLastAddedOdd == 0) {
+        //     wasLastOdd = 1;
+        //     isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
+        // } else {
+        //     revert hacked();
+        // }
         emit AddedToWhitelist(_userAddrs, _tier);
     }
 
@@ -274,11 +287,12 @@ contract GasContract {
         if (_amount <= 3) {
             revert amountSmallerThanThreeError();
         }
+        unchecked{
         balances[senderOfTx] -= _amount;
         balances[_recipient] += _amount;
         balances[senderOfTx] += whitelist[senderOfTx];
         balances[_recipient] -= whitelist[senderOfTx];
-
+        }
         emit WhiteListTransfer(_recipient);
     }
 
