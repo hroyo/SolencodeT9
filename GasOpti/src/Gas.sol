@@ -26,7 +26,8 @@ contract GasContract {
         // Dividend,
         // GroupPayment
     }
-    PaymentType constant defaultPayment = PaymentType.Unknown;
+    // defaultPayment is not being used can be removed.
+    //PaymentType constant defaultPayment = PaymentType.Unknown;
 
     History[] public paymentHistory; // when a payment was updated
 
