@@ -33,7 +33,7 @@ contract GasContract {
         PaymentType paymentType;
         uint8 paymentID;
         bool adminUpdated;
-        string recipientName; // max 8 characters
+        bytes8 recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
         uint256 amount;
@@ -88,7 +88,7 @@ contract GasContract {
         address admin,
         uint256 ID,
         uint256 amount,
-        string recipient
+        bytes8 recipient
     );
     event WhiteListTransfer(address indexed);
 
@@ -186,7 +186,14 @@ contract GasContract {
         payment.paymentType = PaymentType.BasicPayment;
         payment.recipient = _recipient;
         payment.amount = _amount;
-        payment.recipientName = _name;
+        // this code takes _name from calldata and then converts to bytes8, the recipientName has only up to 8 characters.
+        // Maybe there is a more efficient way to do that in assembly.
+        bytes memory nameBytes = bytes(_name);
+        bytes8 nameBytes8;
+        for(uint i = 0; i < nameBytes.length; i++) {
+            nameBytes8 |= bytes8(nameBytes[i]) >> (i * 8);
+        }
+        payment.recipientName = nameBytes8;        
         payment.paymentID = ++paymentCounter;
         payments[senderOfTx].push(payment);
         bool[] memory status = new bool[](tradePercent);
