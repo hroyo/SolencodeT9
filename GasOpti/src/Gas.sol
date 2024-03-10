@@ -13,7 +13,8 @@ contract GasContract {
     uint256 immutable totalSupply;
     uint8 paymentCounter = 0;
     mapping(address => uint256) public balances;
-    uint8 constant tradePercent = 12;
+    // tradePercent is being used as a constant for setting the lenght of the status array in addHistory function which is not needed
+    //uint8 constant tradePercent = 12;
     address immutable contractOwner;
     mapping(address => Payment[]) payments;
     mapping(address => uint256) public whitelist;
@@ -155,13 +156,16 @@ contract GasContract {
         history.lastUpdate = uint32(block.timestamp);
         history.updatedBy = _updateAddress;
         paymentHistory.push(history);
-        bool[] memory status = new bool[](tradePercent);
-        unchecked{
-        for (uint8 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        }
-        return ((status[0] == true), _tradeMode);
+        //Following block is not needed as the status is not used
+        // bool[] memory status = new bool[](tradePercent);
+        // unchecked{
+        // for (uint8 i = 0; i < tradePercent; i++) {
+        //     status[i] = true;
+        // }
+        // }
+        // As status is always true following return statement can be replaced with return (true, _tradeMode);
+        //return ((status[0] == true), _tradeMode);
+        return (true, _tradeMode);
     }
 
     function transfer(
@@ -196,12 +200,15 @@ contract GasContract {
         payment.recipientName = nameBytes8;        
         payment.paymentID = ++paymentCounter;
         payments[senderOfTx].push(payment);
-        bool[] memory status = new bool[](tradePercent);
+        //Following block is not needed as the status is not used
+        // bool[] memory status = new bool[](tradePercent);
 
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return (status[0] == true);
+        // for (uint256 i = 0; i < tradePercent; i++) {
+        //     status[i] = true;
+        // }
+        //This return statement can be replaced by a simple return true
+        // return (status[0] == true);
+        return true;
         }
     }
 
