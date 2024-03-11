@@ -13,30 +13,30 @@ contract GasContract {
     mapping(address => uint256) public balances;
 
     address immutable contractOwner;
-    mapping(address => Payment[]) payments;
+    // mapping(address => Payment[]) payments;
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
-    enum PaymentType {
-        Unknown,
-        BasicPayment //,
-        // Refund,
-        // Dividend,
-        // GroupPayment
-    }
+    // enum PaymentType {
+    //     Unknown,
+    //     BasicPayment //,
+    //     // Refund,
+    //     // Dividend,
+    //     // GroupPayment
+    // }
     // defaultPayment is not being used can be removed.
     //PaymentType constant defaultPayment = PaymentType.Unknown;
 
     // History[] paymentHistory; // when a payment was updated
 
-    struct Payment {
-        PaymentType paymentType;
-        uint8 paymentID;
-        bool adminUpdated;
-        bytes8 recipientName; // max 8 characters
-        address recipient;
-        address admin; // administrators address
-        uint256 amount;
-    }
+    // struct Payment {
+    //     PaymentType paymentType;
+    //     uint8 paymentID;
+    //     bool adminUpdated;
+    //     bytes8 recipientName; // max 8 characters
+    //     address recipient;
+    //     address admin; // administrators address
+    //     uint256 amount;
+    // }
 
     // struct History {
     //     uint32 lastUpdate;
@@ -46,15 +46,17 @@ contract GasContract {
     // uint8 wasLastOdd = 1;
     // mapping(address => uint8) public isOddWhitelistUser;
 
-    struct ImportantStruct {
-        uint256 amount;
-        // uint8 valueA; // max 3 digits
-        // uint8 bigValue;
-        // uint8 valueB; // max 3 digits
-        bool paymentStatus;
-        // address sender;
-    }
-    mapping(address => ImportantStruct) whiteListStruct;
+    // struct ImportantStruct {
+    //     uint256 amount;
+    //     // uint8 valueA; // max 3 digits
+    //     // uint8 bigValue;
+    //     // uint8 valueB; // max 3 digits
+    //     bool paymentStatus;
+    //     // address sender;
+    // }
+    // mapping(address => ImportantStruct) whiteListStruct;
+
+    mapping(address => uint256) private whiteList;
 
     event AddedToWhitelist(address userAddress, uint256 tier);
 
@@ -171,7 +173,7 @@ contract GasContract {
         address _recipient,
         uint256 _amount,
         string calldata _name
-    ) public returns (bool status_) {
+    ) external {
         address senderOfTx = msg.sender;
         // if (balances[senderOfTx] < _amount) {
         //     revert insufficientBalanceError();
@@ -183,66 +185,29 @@ contract GasContract {
             balances[senderOfTx] -= _amount;
             balances[_recipient] += _amount;
             // emit Transfer(_recipient, _amount);
-            Payment memory payment;
-            payment.admin = address(0);
-            payment.adminUpdated = false;
-            payment.paymentType = PaymentType.BasicPayment;
-            payment.recipient = _recipient;
-            payment.amount = _amount;
+            // Payment memory payment;
+            // payment.admin = address(0);
+            // payment.adminUpdated = false;
+            // payment.paymentType = PaymentType.BasicPayment;
+            // payment.recipient = _recipient;
+            // payment.amount = _amount;
             // this code takes _name from calldata and then converts to bytes8, the recipientName has only up to 8 characters.
             // Maybe there is a more efficient way to do that in assembly.
-            bytes memory nameBytes = bytes(_name);
-            bytes8 nameBytes8;
-            for (uint i = 0; i < nameBytes.length; ++i) {
-                nameBytes8 |= bytes8(nameBytes[i]) >> (i * 8);
-            }
-            payment.recipientName = nameBytes8;
-            payment.paymentID = ++paymentCounter;
-            payments[senderOfTx].push(payment);
+            // bytes memory nameBytes = bytes(_name);
+            // bytes8 nameBytes8;
+            // for (uint i = 0; i < nameBytes.length; ++i) {
+            //     nameBytes8 |= bytes8(nameBytes[i]) >> (i * 8);
+            // }
+            // payment.recipientName = nameBytes8;
+            // payment.paymentID = ++paymentCounter;
+            // payments[senderOfTx].push(payment);
             // bool[] memory status = new bool[](tradePercent);
 
             // for (uint256 i = 0; i < tradePercent; ++i) {
             //     status[i] = true;
             // }
             // return (status[0] == true);
-            status_ = true;
-        }
-    }
-
-    function updatePayment(
-        address _user,
-        uint8 _ID,
-        uint256 _amount,
-        PaymentType _type
-    ) private onlyAdminOrOwner {
-        // if (_ID <= 0) {
-        //     revert idNotGreaterThanZeroError();
-        // }
-        // if (_amount <= 0) {
-        //     revert amountNotGreaterThanZeroError();
-        // }
-        // if (_user == address(0)) {
-        //     revert nonZeroAddressError();
-        // }
-
-        // address senderOfTx = msg.sender;
-        unchecked {
-            for (uint256 ii = 0; ii < payments[_user].length; ++ii) {
-                if (payments[_user][ii].paymentID == _ID) {
-                    payments[_user][ii].adminUpdated = true;
-                    payments[_user][ii].admin = _user;
-                    payments[_user][ii].paymentType = _type;
-                    payments[_user][ii].amount = _amount;
-                    // bool tradingMode = true;
-                    // addHistory(_user, tradingMode);
-                    // emit PaymentUpdated(
-                    //     senderOfTx,
-                    //     _ID,
-                    //     _amount,
-                    //     payments[_user][ii].recipientName
-                    // );
-                }
-            }
+            // status_ = true;
         }
     }
 
@@ -289,14 +254,7 @@ contract GasContract {
         uint256 _amount
     ) public checkIfWhiteListed(msg.sender) {
         address senderOfTx = msg.sender;
-        whiteListStruct[senderOfTx] = ImportantStruct(
-            _amount,
-            // 0,
-            // 0,
-            // 0,
-            true //,
-            // msg.sender
-        );
+        whiteList[senderOfTx] = _amount;
         // if (balances[senderOfTx] < _amount) {
         //     revert insufficientBalanceError();
         // }
@@ -315,17 +273,14 @@ contract GasContract {
     function getPaymentStatus(
         address sender
     ) public view returns (bool, uint256) {
-        return (
-            whiteListStruct[sender].paymentStatus,
-            whiteListStruct[sender].amount
-        );
+        return (true, whiteList[sender]);
     }
 
-    receive() external payable {
-        payable(msg.sender).transfer(msg.value);
-    }
+    // receive() external payable {
+    //     payable(msg.sender).transfer(msg.value);
+    // }
 
-    fallback() external payable {
-        payable(msg.sender).transfer(msg.value);
-    }
+    // fallback() external payable {
+    //     payable(msg.sender).transfer(msg.value);
+    // }
 }
