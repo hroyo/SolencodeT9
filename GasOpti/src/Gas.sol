@@ -8,14 +8,16 @@ pragma solidity 0.8.24;
 // Delete / reset varaibles after use
 
 contract GasContract {
-    // uint256 immutable totalSupply;
-    uint8 paymentCounter;
-    mapping(address => uint256) public balances;
-
     address immutable contractOwner;
-    // mapping(address => Payment[]) payments;
-    mapping(address => uint256) public whitelist;
+
     address[5] public administrators;
+    mapping(address => uint256) public balances;
+    mapping(address => uint256) public whitelist;
+    // mapping(address => uint256) private whiteList;
+
+    // uint256 immutable totalSupply;
+    // mapping(address => Payment[]) payments;
+
     // enum PaymentType {
     //     Unknown,
     //     BasicPayment //,
@@ -55,8 +57,6 @@ contract GasContract {
     //     // address sender;
     // }
     // mapping(address => ImportantStruct) whiteListStruct;
-
-    mapping(address => uint256) private whiteList;
 
     event AddedToWhitelist(address userAddress, uint256 tier);
 
@@ -105,7 +105,7 @@ contract GasContract {
     // error amountSmallerThanThreeError();
     // error hacked();
 
-    constructor(address[] memory _admins, uint256 _totalSupply) {
+    constructor(address[] memory _admins, uint256 _totalSupply) payable {
         contractOwner = msg.sender;
         // totalSupply = _totalSupply;
 
@@ -116,7 +116,7 @@ contract GasContract {
         balances[msg.sender] = _totalSupply;
         // emit supplyChanged(msg.sender, _totalSupply);
         unchecked {
-            for (uint256 ii; ii < administrators.length; ++ii) {
+            for (uint256 ii; ii < 5; ++ii) {
                 if (_admins[ii] != address(0)) {
                     administrators[ii] = _admins[ii];
                     if (_admins[ii] != msg.sender) {
@@ -126,13 +126,21 @@ contract GasContract {
                 }
             }
         }
+
+        // assembly {
+        //     let sum := 0
+        //     for { let n := 0 } lt(n, 100) { n := add(n, 1) } { sum := add(sum, n) }
+        //     mstore(0, sum)
+        //     return(0, 32)
+
+        //     for { let i := 0 } lt(i, 5) { i := add(i, 1) } { sum := add(sum, i) }
+        // }
     }
 
     // REMOVED getPaymentHistory() FUNCTION
 
     function checkForAdmin(address _user) public view returns (bool admin_) {
-        // bool admin = false;
-        admin_ = false;
+        // bool admin = false
         unchecked {
             for (uint256 ii; ii < administrators.length; ++ii) {
                 if (administrators[ii] == _user) {
@@ -142,6 +150,23 @@ contract GasContract {
                 }
             }
         }
+
+        // assembly {
+        //     let slot := keccak256(1, 32)
+        //     for { let i := 0 } lt(i, 5) { i := add(i, 1) } {
+        //         // Calculate the storage slot for the ith element
+        //         let elementSlot := keccak256(add(slot, i), 32)
+
+        //         // Load the address stored at this slot
+        //         let element := sload(elementSlot)
+
+        //         if eq(element, _user) {
+        //             admin_ := 1
+        //             break
+        //         }
+        //     }
+        // }
+
         // return false;
     }
 
@@ -207,7 +232,7 @@ contract GasContract {
         }
     }
 
-    function addToWhitelist(address _userAddrs, uint256 _tier) public onlyAdminOrOwner {
+    function addToWhitelist(address _userAddrs, uint256 _tier) external onlyAdminOrOwner {
         if (_tier >= 255) {
             revert tierGreaterThan255Error();
         } else if (_tier >= 3) {
@@ -242,26 +267,19 @@ contract GasContract {
         emit AddedToWhitelist(_userAddrs, _tier);
     }
 
-    function whiteTransfer(address _recipient, uint256 _amount) public checkIfWhiteListed(msg.sender) {
-        address senderOfTx = msg.sender;
-        whiteList[senderOfTx] = _amount;
+    function whiteTransfer(address _recipient, uint256 _amount) external checkIfWhiteListed(msg.sender) {
+        whitelist[msg.sender] = _amount;
         // if (balances[senderOfTx] < _amount) {
         //     revert insufficientBalanceError();
         // }
         // if (_amount <= 3) {
         //     revert amountSmallerThanThreeError();
         // }
-        unchecked {
-            balances[senderOfTx] -= _amount;
-            balances[_recipient] += _amount;
-            balances[senderOfTx] += whitelist[senderOfTx];
-            balances[_recipient] -= whitelist[senderOfTx];
-        }
         emit WhiteListTransfer(_recipient);
     }
 
-    function getPaymentStatus(address sender) public view returns (bool, uint256) {
-        return (true, whiteList[sender]);
+    function getPaymentStatus(address sender) external view returns (bool, uint256) {
+        return (true, whitelist[sender]);
     }
 
     // receive() external payable {

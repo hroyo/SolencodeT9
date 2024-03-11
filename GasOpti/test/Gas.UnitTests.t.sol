@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0; 
+pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/Gas.sol";
@@ -16,7 +16,7 @@ contract GasTest is Test {
         address(0x3243Ed9fdCDE2345890DDEAf6b083CA4cF0F68f2),
         address(0x2b263f55Bf2125159Ce8Ec2Bb575C649f822ab46),
         address(0x0eD94Bc8435F3189966a49Ca1358a55d871FC3Bf),
-        address(0xeadb3d065f8d15cc05e92594523516aD36d1c834), 
+        address(0xeadb3d065f8d15cc05e92594523516aD36d1c834),
         owner
     ];
 
@@ -30,37 +30,36 @@ contract GasTest is Test {
         for (uint8 i = 0; i < admins.length; ++i) {
             assertEq(admins[i], gas.administrators(i));
         }
-    } 
+    }
 
     // addToWhitelist Tests
-    
 
     function test_onlyOwner(address _userAddrs, uint256 _tier) public {
         vm.assume(_userAddrs != address(gas));
-        _tier = bound( _tier, 1, 244);
+        _tier = bound(_tier, 1, 244);
         vm.expectRevert();
         gas.addToWhitelist(_userAddrs, _tier);
     }
 
     function test_tiers(address _userAddrs, uint256 _tier) public {
         vm.assume(_userAddrs != address(gas));
-        _tier = bound( _tier, 1, 244);
+        _tier = bound(_tier, 1, 244);
         vm.prank(owner);
         gas.addToWhitelist(_userAddrs, _tier);
     }
 
-    // Expect Event --> 
+    // Expect Event -->
     event AddedToWhitelist(address userAddress, uint256 tier);
+
     function test_whitelistEvents(address _userAddrs, uint256 _tier) public {
         vm.startPrank(owner);
         vm.assume(_userAddrs != address(gas));
-        _tier = bound( _tier, 1, 244);
+        _tier = bound(_tier, 1, 244);
         vm.expectEmit(true, true, false, true);
         emit AddedToWhitelist(_userAddrs, _tier);
         gas.addToWhitelist(_userAddrs, _tier);
         vm.stopPrank();
     }
-
 
     //----------------------------------------------------//
     //------------- Test whitelist Transfers -------------//
@@ -69,14 +68,14 @@ contract GasTest is Test {
     function test_whitelistTransfer(
         address _recipient,
         address _sender,
-        uint256 _amount, 
+        uint256 _amount,
         string calldata _name,
         uint256 _tier
     ) public {
-        _amount = bound(_amount,0 , gas.balanceOf(owner));
+        _amount = bound(_amount, 0, gas.balanceOf(owner));
         vm.assume(_amount > 3);
-        vm.assume(bytes(_name).length < 9 );
-        _tier = bound( _tier, 1, 244);
+        vm.assume(bytes(_name).length < 9);
+        _tier = bound(_tier, 1, 244);
         vm.startPrank(owner);
         gas.transfer(_sender, _amount, _name);
         gas.addToWhitelist(_sender, _tier);
@@ -98,20 +97,20 @@ contract GasTest is Test {
         gas.addToWhitelist(_userAddrs, _tier);
     }
 
-    // Expect Event --> 
+    // Expect Event -->
     event WhiteListTransfer(address indexed);
+
     function test_whitelistEvents(
         address _recipient,
         address _sender,
-        uint256 _amount, 
+        uint256 _amount,
         string calldata _name,
         uint256 _tier
     ) public {
-
-        _amount = bound(_amount,0 , gas.balanceOf(owner));
+        _amount = bound(_amount, 0, gas.balanceOf(owner));
         vm.assume(_amount > 3);
-        vm.assume(bytes(_name).length < 9 );
-        _tier = bound( _tier, 1, 244);
+        vm.assume(bytes(_name).length < 9);
+        _tier = bound(_tier, 1, 244);
         vm.startPrank(owner);
         gas.transfer(_sender, _amount, _name);
         gas.addToWhitelist(_sender, _tier);
@@ -123,28 +122,28 @@ contract GasTest is Test {
         vm.stopPrank();
     }
 
-        /* whiteTranfer balance logic. 
+    /* whiteTranfer balance logic. 
         balances[senderOfTx] -= _amount;
         balances[_recipient] += _amount;
         balances[senderOfTx] += whitelist[senderOfTx];
         balances[_recipient] -= whitelist[senderOfTx]; 
         */
 
-    // check balances update 
+    // check balances update
     function testWhiteTranferAmountUpdate(
         address _recipient,
         address _sender,
-        uint256 _amount, 
+        uint256 _amount,
         string calldata _name,
         uint256 _tier
     ) public {
         uint256 _preRecipientAmount = gas.balances(_recipient) + 0;
         vm.assume(_recipient != address(0));
         vm.assume(_sender != address(0));
-         _amount = bound(_amount,0 , gas.balanceOf(owner));
-        _tier = bound( _tier, 1, 244);
+        _amount = bound(_amount, 0, gas.balanceOf(owner));
+        _tier = bound(_tier, 1, 244);
         vm.assume(_amount > 3);
-        vm.assume(bytes(_name).length < 9 && bytes(_name).length >0);
+        vm.assume(bytes(_name).length < 9 && bytes(_name).length > 0);
         vm.startPrank(owner);
         gas.transfer(_sender, _amount, _name);
         uint256 _preSenderAmount = gas.balances(_sender);
@@ -153,7 +152,7 @@ contract GasTest is Test {
         vm.prank(_sender);
         gas.whiteTransfer(_recipient, _amount);
         assertEq(gas.balances(_sender), (_preSenderAmount - _amount) + gas.whitelist(_sender));
-        assertEq(gas.balances(_recipient),(_preRecipientAmount + _amount) - gas.whitelist(_sender));
+        assertEq(gas.balances(_recipient), (_preRecipientAmount + _amount) - gas.whitelist(_sender));
     }
 
     function testBalanceOf() public {
