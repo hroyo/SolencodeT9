@@ -9,7 +9,7 @@ pragma solidity 0.8.24;
 
 contract GasContract {
     // uint256 immutable totalSupply;
-    uint8 paymentCounter = 0;
+    uint8 paymentCounter;
     mapping(address => uint256) public balances;
 
     address immutable contractOwner;
@@ -116,7 +116,7 @@ contract GasContract {
         balances[msg.sender] = _totalSupply;
         // emit supplyChanged(msg.sender, _totalSupply);
         unchecked {
-            for (uint256 ii = 0; ii < administrators.length; ++ii) {
+            for (uint256 ii; ii < administrators.length; ++ii) {
                 if (_admins[ii] != address(0)) {
                     administrators[ii] = _admins[ii];
                     if (_admins[ii] != msg.sender) {
@@ -134,7 +134,7 @@ contract GasContract {
         // bool admin = false;
         admin_ = false;
         unchecked {
-            for (uint256 ii = 0; ii < administrators.length; ++ii) {
+            for (uint256 ii; ii < administrators.length; ++ii) {
                 if (administrators[ii] == _user) {
                     admin_ = true;
                     // return(true);
@@ -169,11 +169,7 @@ contract GasContract {
     //     return ((status[0] == true), _tradeMode);
     // }
 
-    function transfer(
-        address _recipient,
-        uint256 _amount,
-        string calldata _name
-    ) external {
+    function transfer(address _recipient, uint256 _amount, string calldata _name) external {
         address senderOfTx = msg.sender;
         // if (balances[senderOfTx] < _amount) {
         //     revert insufficientBalanceError();
@@ -211,10 +207,7 @@ contract GasContract {
         }
     }
 
-    function addToWhitelist(
-        address _userAddrs,
-        uint256 _tier
-    ) public onlyAdminOrOwner {
+    function addToWhitelist(address _userAddrs, uint256 _tier) public onlyAdminOrOwner {
         if (_tier >= 255) {
             revert tierGreaterThan255Error();
         } else if (_tier >= 3) {
@@ -249,10 +242,7 @@ contract GasContract {
         emit AddedToWhitelist(_userAddrs, _tier);
     }
 
-    function whiteTransfer(
-        address _recipient,
-        uint256 _amount
-    ) public checkIfWhiteListed(msg.sender) {
+    function whiteTransfer(address _recipient, uint256 _amount) public checkIfWhiteListed(msg.sender) {
         address senderOfTx = msg.sender;
         whiteList[senderOfTx] = _amount;
         // if (balances[senderOfTx] < _amount) {
@@ -270,9 +260,7 @@ contract GasContract {
         emit WhiteListTransfer(_recipient);
     }
 
-    function getPaymentStatus(
-        address sender
-    ) public view returns (bool, uint256) {
+    function getPaymentStatus(address sender) public view returns (bool, uint256) {
         return (true, whiteList[sender]);
     }
 
