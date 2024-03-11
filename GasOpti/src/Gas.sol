@@ -3,14 +3,12 @@ pragma solidity 0.8.24;
 
 // TO BE OPTIMISED
 // Optimize storage slots
-// Transform modifier functions into internal functions.
-// Optimize the size of variables (for example timestamps do not need to be uint256).
 // Variables that are only set once can be set as immutable if they are initialized in the constructor
 // Variables that do not change in value can be set as constant
 // Delete / reset varaibles after use
 
 contract GasContract {
-    uint256 immutable totalSupply;
+    // uint256 immutable totalSupply;
     uint8 paymentCounter = 0;
     mapping(address => uint256) public balances;
 
@@ -20,7 +18,7 @@ contract GasContract {
     address[5] public administrators;
     enum PaymentType {
         Unknown,
-        BasicPayment//,
+        BasicPayment //,
         // Refund,
         // Dividend,
         // GroupPayment
@@ -62,7 +60,7 @@ contract GasContract {
 
     modifier onlyAdminOrOwner() {
         address senderOfTx = msg.sender;
-        if (!checkForAdmin(senderOfTx) && senderOfTx != contractOwner) {
+        if (senderOfTx != contractOwner && !checkForAdmin(senderOfTx)) {
             revert originatorNotSenderError();
         }
         _;
@@ -73,8 +71,7 @@ contract GasContract {
         if (senderOfTx != sender) {
             revert originatorNotSenderError();
         }
-        uint256 usersTier = whitelist[senderOfTx];
-        if (usersTier <= 0) {
+        if (whitelist[senderOfTx] <= 0) {
             revert notWhitelistedError();
         }
         // if (usersTier >= 4) {
@@ -102,12 +99,13 @@ contract GasContract {
     // error idNotGreaterThanZeroError();
     // error amountNotGreaterThanZeroError();
     error tierGreaterThan255Error();
+
     // error amountSmallerThanThreeError();
     // error hacked();
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
         contractOwner = msg.sender;
-        totalSupply = _totalSupply;
+        // totalSupply = _totalSupply;
 
         // 1) loop through administrators array with 5 empty slots
         // 2) skip loops where the address in _admins array is 0
@@ -115,16 +113,16 @@ contract GasContract {
         // 4) set the balance of the address in the administrators array to 0, except for the contractOwner
         balances[msg.sender] = _totalSupply;
         // emit supplyChanged(msg.sender, _totalSupply);
-        unchecked{
-        for (uint256 ii = 0; ii < administrators.length; ++ii) {
-            if (_admins[ii] != address(0)) {
-                administrators[ii] = _admins[ii];
-                if (_admins[ii] != msg.sender) {
-                    balances[_admins[ii]] = 0;
-                    // emit supplyChanged(_admins[ii], 0);
+        unchecked {
+            for (uint256 ii = 0; ii < administrators.length; ++ii) {
+                if (_admins[ii] != address(0)) {
+                    administrators[ii] = _admins[ii];
+                    if (_admins[ii] != msg.sender) {
+                        balances[_admins[ii]] = 0;
+                        // emit supplyChanged(_admins[ii], 0);
+                    }
                 }
             }
-        }
         }
     }
 
@@ -133,14 +131,14 @@ contract GasContract {
     function checkForAdmin(address _user) public view returns (bool admin_) {
         // bool admin = false;
         admin_ = false;
-        unchecked{
-        for (uint256 ii = 0; ii < administrators.length; ++ii) {
-            if (administrators[ii] == _user) {
-                admin_ = true;
-                // return(true);
-                // break;
+        unchecked {
+            for (uint256 ii = 0; ii < administrators.length; ++ii) {
+                if (administrators[ii] == _user) {
+                    admin_ = true;
+                    // return(true);
+                    // break;
+                }
             }
-        }
         }
         // return false;
     }
@@ -181,33 +179,33 @@ contract GasContract {
         // if (bytes(_name).length >= 9) {
         //     revert nameTooLongError();
         // }
-        unchecked{
-        balances[senderOfTx] -= _amount;
-        balances[_recipient] += _amount;
-        // emit Transfer(_recipient, _amount);
-        Payment memory payment;
-        payment.admin = address(0);
-        payment.adminUpdated = false;
-        payment.paymentType = PaymentType.BasicPayment;
-        payment.recipient = _recipient;
-        payment.amount = _amount;
-        // this code takes _name from calldata and then converts to bytes8, the recipientName has only up to 8 characters.
-        // Maybe there is a more efficient way to do that in assembly.
-        bytes memory nameBytes = bytes(_name);
-        bytes8 nameBytes8;
-        for(uint i = 0; i < nameBytes.length; ++i) {
-            nameBytes8 |= bytes8(nameBytes[i]) >> (i * 8);
-        }
-        payment.recipientName = nameBytes8;        
-        payment.paymentID = ++paymentCounter;
-        payments[senderOfTx].push(payment);
-        // bool[] memory status = new bool[](tradePercent);
+        unchecked {
+            balances[senderOfTx] -= _amount;
+            balances[_recipient] += _amount;
+            // emit Transfer(_recipient, _amount);
+            Payment memory payment;
+            payment.admin = address(0);
+            payment.adminUpdated = false;
+            payment.paymentType = PaymentType.BasicPayment;
+            payment.recipient = _recipient;
+            payment.amount = _amount;
+            // this code takes _name from calldata and then converts to bytes8, the recipientName has only up to 8 characters.
+            // Maybe there is a more efficient way to do that in assembly.
+            bytes memory nameBytes = bytes(_name);
+            bytes8 nameBytes8;
+            for (uint i = 0; i < nameBytes.length; ++i) {
+                nameBytes8 |= bytes8(nameBytes[i]) >> (i * 8);
+            }
+            payment.recipientName = nameBytes8;
+            payment.paymentID = ++paymentCounter;
+            payments[senderOfTx].push(payment);
+            // bool[] memory status = new bool[](tradePercent);
 
-        // for (uint256 i = 0; i < tradePercent; ++i) {
-        //     status[i] = true;
-        // }
-        // return (status[0] == true);
-        status_ = true;
+            // for (uint256 i = 0; i < tradePercent; ++i) {
+            //     status[i] = true;
+            // }
+            // return (status[0] == true);
+            status_ = true;
         }
     }
 
@@ -228,23 +226,23 @@ contract GasContract {
         // }
 
         // address senderOfTx = msg.sender;
-        unchecked{
-        for (uint256 ii = 0; ii < payments[_user].length; ++ii) {
-            if (payments[_user][ii].paymentID == _ID) {
-                payments[_user][ii].adminUpdated = true;
-                payments[_user][ii].admin = _user;
-                payments[_user][ii].paymentType = _type;
-                payments[_user][ii].amount = _amount;
-                // bool tradingMode = true;
-                // addHistory(_user, tradingMode);
-                // emit PaymentUpdated(
-                //     senderOfTx,
-                //     _ID,
-                //     _amount,
-                //     payments[_user][ii].recipientName
-                // );
+        unchecked {
+            for (uint256 ii = 0; ii < payments[_user].length; ++ii) {
+                if (payments[_user][ii].paymentID == _ID) {
+                    payments[_user][ii].adminUpdated = true;
+                    payments[_user][ii].admin = _user;
+                    payments[_user][ii].paymentType = _type;
+                    payments[_user][ii].amount = _amount;
+                    // bool tradingMode = true;
+                    // addHistory(_user, tradingMode);
+                    // emit PaymentUpdated(
+                    //     senderOfTx,
+                    //     _ID,
+                    //     _amount,
+                    //     payments[_user][ii].recipientName
+                    // );
+                }
             }
-        }
         }
     }
 
@@ -254,6 +252,10 @@ contract GasContract {
     ) public onlyAdminOrOwner {
         if (_tier >= 255) {
             revert tierGreaterThan255Error();
+        } else if (_tier >= 3) {
+            whitelist[_userAddrs] = 3;
+        } else {
+            whitelist[_userAddrs] = _tier;
         }
         // whitelist[_userAddrs] = _tier;
         // unchecked{
@@ -268,14 +270,6 @@ contract GasContract {
         //     whitelist[_userAddrs] = 2;
         // }
         // }
-
-        if(_tier >= 3){
-            whitelist[_userAddrs] = 3;
-        }
-
-        else {
-            whitelist[_userAddrs] = _tier;
-        }        
 
         // uint8 wasLastAddedOdd = wasLastOdd;
         // if (wasLastAddedOdd == 1) {
@@ -300,7 +294,7 @@ contract GasContract {
             // 0,
             // 0,
             // 0,
-            true//,
+            true //,
             // msg.sender
         );
         // if (balances[senderOfTx] < _amount) {
@@ -309,11 +303,11 @@ contract GasContract {
         // if (_amount <= 3) {
         //     revert amountSmallerThanThreeError();
         // }
-        unchecked{
-        balances[senderOfTx] -= _amount;
-        balances[_recipient] += _amount;
-        balances[senderOfTx] += whitelist[senderOfTx];
-        balances[_recipient] -= whitelist[senderOfTx];
+        unchecked {
+            balances[senderOfTx] -= _amount;
+            balances[_recipient] += _amount;
+            balances[senderOfTx] += whitelist[senderOfTx];
+            balances[_recipient] -= whitelist[senderOfTx];
         }
         emit WhiteListTransfer(_recipient);
     }
