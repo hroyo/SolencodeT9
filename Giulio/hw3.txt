@@ -1,0 +1,6 @@
+1. What are the advantages and disadvantages of the 256 bit word length in the EVM
+Keccak256 is used to hash nodes in all 4 tries and ECDSA elliptic curve algorithm is used to generate addresses and sign txs.
+Therefore, it is easier for the EVM to be made of 256 bit words.
+
+2. What would happen if the implementation of a precompiled contract varied between Ethereum clients?
+These happen offchain, so they would lead to different execution across clients and therefore lack of consensus about state
